@@ -2,6 +2,15 @@
 
 Sample Repo to perform SCA on open source python packages
 
+
+## Databricks Infrastructure SCA
+
+1. Stage 1 - Verify [file_exists.sh](scripts/file_exists.sh) File Exists (Control Gate - Installed libraries are in SCM & versioned)
+2. Stage 2 - Snyk SCA Scan (Control Gate - To be installed do not have critical vulernabilities)
+3. Stage 3 - Upload [init.sh](scripts/init.sh) & [requirements.txt](requirements.txt) to Blob Storage (Control Gate - To be installed libraries are on Object Store or DBFS)
+4. Stage 4 - Create Databricks cluster using [create_cluster.py](scripts/create_cluster.py) & execute init.sh which install packages in requirements.txt. Wait till cluster in RUNNING state
+
+
 ## Local Setup
 
 ### Pre-requisities
