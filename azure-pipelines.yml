@@ -1,0 +1,47 @@
+trigger:
+  - main
+ 
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: file_requirements_exists
+  displayName: File requirements Exists
+  jobs:
+    - job: file_exists_job
+      steps:
+      - script: |
+          sh scripts/file_exists.sh
+        workingDirectory: ${projectRoot}
+
+- stage: snyk_sca
+  displayName: Snyk SCA
+  jobs:
+    - job: snyk_sca_job
+      steps:
+      - script: |
+          curl https://static.snyk.io/cli/latest/snyk-linux?_gl=1*1t9oyhp*_ga*MTI3NDIxNTI1Ny4xNjk3Mzk0OTQy*_ga_X9SH3KP7B4*MTY5NzM5NDk0Mi4xLjEuMTY5NzM5NTU4Ny4zNS4wLjA. -o snyk
+          chmod +x snyk
+          snyk test --fail-fast --file=requirements.txt --package-manager=pip --project-name=db-cluster-admin --fail-on=all --severity-threshold=high
+        workingDirectory: ${projectRoot}
+
+- stage: upload_scripts
+  displayName: Upload init and requirements
+  jobs:
+    - job: upload_scripts_job
+      steps:
+      - script: |
+          pip install databricks-cli
+          databricks fs cp --overwrite $(Pipeline.Workspace)/requirements.txt dbfs:/requirements.txt
+          databricks fs cp --overwrite $(Pipeline.Workspace)/scripts/init.sh dbfs:/init.sh
+        workingDirectory: ${projectRoot}
+
+- stage: create_db_cluster
+  displayName: Create Databricks Cluster
+  jobs:
+    - job: create_cluster_job
+      steps:
+      - script: |
+          python scripts/create_cluster.py
+        workingDirectory: ${projectRoot}
+  
